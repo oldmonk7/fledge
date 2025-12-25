@@ -13,7 +13,6 @@ export class EmployeesController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    console.log('findOne', id);
     return this.employeesService.findOne(id);
   }
 

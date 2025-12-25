@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Link from 'next/link';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -22,9 +23,25 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-6">
                 <div className="flex items-center">
-                  <h1 className="text-2xl font-bold text-gray-900">Fledge</h1>
-                  <span className="ml-2 text-sm text-gray-500">DCFSA Management</span>
+                  <Link href="/" className="flex items-center">
+                    <h1 className="text-2xl font-bold text-gray-900">Fledge</h1>
+                    <span className="ml-2 text-sm text-gray-500">DCFSA Management</span>
+                  </Link>
                 </div>
+                <nav className="flex space-x-4">
+                  <Link
+                    href="/"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    href="/employees"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Employees
+                  </Link>
+                </nav>
               </div>
             </div>
           </header>
