@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
-import { EmployeeWithFSA } from '@fledge/shared';
+import { EmployeeWithFSA, AggregateUsage } from '@fledge/shared';
 
 @Controller('employees')
 export class EmployeesController {
@@ -25,5 +25,10 @@ export class EmployeesController {
   @Get('by-employee-id/:employeeId')
   async findByEmployeeId(@Param('employeeId') employeeId: string) {
     return this.employeesService.findByEmployeeId(employeeId);
+  }
+
+  @Get('aggregate/usage')
+  async getAggregateUsage(): Promise<AggregateUsage> {
+    return this.employeesService.getAggregateUsage();
   }
 }

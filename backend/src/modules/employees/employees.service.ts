@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Employee } from '../../entities/employee.entity';
-import { EmployeeWithFSA } from '@fledge/shared';
+import { EmployeeWithFSA, AggregateUsage } from '@fledge/shared';
 
 @Injectable()
 export class EmployeesService {
@@ -64,5 +64,52 @@ export class EmployeesService {
     }
 
     return employee;
+  }
+
+  async getAggregateUsage(): Promise<AggregateUsage> {
+    const employees = await this.employeeRepository.find({
+      relations: ['fsaAccounts'],
+    });
+
+    let totalAnnualLimit = 0;
+    let totalUsedAmount = 0;
+    let activeAccounts = 0;
+    let inactiveAccounts = 0;
+    let accountsWithUsage = 0;
+    let totalUsagePercentage = 0;
+
+    employees.forEach((employee) => {
+      employee.fsaAccounts?.forEach((account) => {
+        totalAnnualLimit += Number(account.annualLimit);
+        totalUsedAmount += Number(account.usedAmount);
+        
+        if (account.status === 'active') {
+          activeAccounts++;
+        } else {
+          inactiveAccounts++;
+        }
+
+        if (account.annualLimit > 0) {
+          const usagePercentage = (Number(account.usedAmount) / Number(account.annualLimit)) * 100;
+          totalUsagePercentage += usagePercentage;
+          accountsWithUsage++;
+        }
+      });
+    });
+
+    const totalRemainingBalance = totalAnnualLimit - totalUsedAmount;
+    const averageUsagePercentage = accountsWithUsage > 0 
+      ? totalUsagePercentage / accountsWithUsage 
+      : 0;
+
+    return {
+      totalEmployees: employees.length,
+      totalAnnualLimit,
+      totalUsedAmount,
+      totalRemainingBalance,
+      averageUsagePercentage,
+      activeAccounts,
+      inactiveAccounts,
+    };
   }
 }

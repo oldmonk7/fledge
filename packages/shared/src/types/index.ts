@@ -29,3 +29,27 @@ export interface EmployeeWithFSA extends Employee {
   fsaAccount: FSAAccount;
 }
 
+export interface AggregateUsage {
+  totalEmployees: number;
+  totalAnnualLimit: number;
+  totalUsedAmount: number;
+  totalRemainingBalance: number;
+  averageUsagePercentage: number;
+  activeAccounts: number;
+  inactiveAccounts: number;
+}
+
+export interface Transaction {
+  id: string;
+  fsaAccountId: string;
+  amount: number;
+  description: string;
+  transactionDate: Date | string;
+  transactionType: 'debit' | 'credit';
+  category?: string;
+  receiptUrl?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+

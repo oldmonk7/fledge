@@ -197,6 +197,21 @@ export default function EmployeeDetailPage() {
               <span>Remaining: ${remainingBalance.toLocaleString()}</span>
             </div>
           </div>
+
+          {/* Allocation Action */}
+          {fsaAccount.status === 'active' && (
+            <div className="mt-6 flex justify-end">
+              <Link
+                href={`/employees/${id}/allocate`}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Allocate Funds
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

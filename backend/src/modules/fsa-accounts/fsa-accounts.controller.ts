@@ -1,5 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { FSAAccountsService } from './fsa-accounts.service';
+
+export class AllocateDto {
+  amount: number;
+  description?: string;
+}
 
 @Controller('fsa-accounts')
 export class FSAAccountsController {
@@ -23,5 +28,10 @@ export class FSAAccountsController {
   @Get('employee/:employeeId/active')
   async findActiveByEmployeeId(@Param('employeeId') employeeId: string) {
     return this.fsaAccountsService.findActiveByEmployeeId(employeeId);
+  }
+
+  @Post(':id/allocate')
+  async allocate(@Param('id') id: string, @Body() allocateDto: AllocateDto) {
+    return this.fsaAccountsService.allocate(id, allocateDto.amount, allocateDto.description);
   }
 }

@@ -1,26 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { EmployeeWithFSA } from '@fledge/shared';
+import { AggregateUsage } from '@fledge/shared';
 
 export default function Home() {
-  const [employeeData, setEmployeeData] = useState<EmployeeWithFSA | null>(null);
+  const [aggregateData, setAggregateData] = useState<AggregateUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEmployeeData = async () => {
+    const fetchAggregateData = async () => {
       try {
-        // For demo purposes, we'll fetch the demo employee
-        // Using the UUID from the database seed data
-        const response = await fetch('/api/employees/a1b2c3d4-e5f6-4789-a012-b3c4d5e6f789/account');
+        const response = await fetch('/api/employees/aggregate/usage');
 
         if (!response.ok) {
-          throw new Error('Failed to fetch employee data');
+          throw new Error('Failed to fetch aggregate usage data');
         }
 
         const data = await response.json();
-        setEmployeeData(data);
+        setAggregateData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -28,7 +26,7 @@ export default function Home() {
       }
     };
 
-    fetchEmployeeData();
+    fetchAggregateData();
   }, []);
 
   if (loading) {
@@ -36,7 +34,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading account details...</p>
+          <p className="mt-4 text-gray-600">Loading aggregate usage data...</p>
         </div>
       </div>
     );
@@ -54,115 +52,147 @@ export default function Home() {
     );
   }
 
-  if (!employeeData) {
+  if (!aggregateData) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <p className="text-gray-600">No employee data found</p>
+          <p className="text-gray-600">No aggregate data found</p>
         </div>
       </div>
     );
   }
 
-  const { fsaAccount } = employeeData;
-  const remainingBalance = fsaAccount.annualLimit - fsaAccount.usedAmount;
+  const usagePercentage = aggregateData.totalAnnualLimit > 0
+    ? (aggregateData.totalUsedAmount / aggregateData.totalAnnualLimit) * 100
+    : 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">FSA Account Aggregate Usage</h1>
+        <p className="mt-2 text-sm text-gray-600">Overview of all employees' FSA account usage</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {/* Total Employees Card */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Employees</dt>
+                <dd className="text-2xl font-semibold text-gray-900">{aggregateData.totalEmployees}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Accounts Card */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Active Accounts</dt>
+                <dd className="text-2xl font-semibold text-gray-900">{aggregateData.activeAccounts}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        {/* Inactive Accounts Card */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-500 text-white">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Inactive Accounts</dt>
+                <dd className="text-2xl font-semibold text-gray-900">{aggregateData.inactiveAccounts}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Summary */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Employee Account Details</h2>
+          <h2 className="text-lg font-medium text-gray-900">Financial Summary</h2>
         </div>
 
         <div className="px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Employee Information */}
+            {/* Total Annual Limit */}
             <div>
-              <h3 className="text-md font-medium text-gray-900 mb-4">Employee Information</h3>
-              <dl className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="text-sm text-gray-900">{employeeData.firstName} {employeeData.lastName}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Employee ID</dt>
-                  <dd className="text-sm text-gray-900">{employeeData.employeeId}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Email</dt>
-                  <dd className="text-sm text-gray-900">{employeeData.email}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Department</dt>
-                  <dd className="text-sm text-gray-900">{employeeData.department || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Hire Date</dt>
-                  <dd className="text-sm text-gray-900">{new Date(employeeData.hireDate).toLocaleDateString()}</dd>
-                </div>
-              </dl>
+              <dt className="text-sm font-medium text-gray-500">Total Annual Limit</dt>
+              <dd className="mt-1 text-3xl font-semibold text-gray-900">
+                ${aggregateData.totalAnnualLimit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </dd>
             </div>
 
-            {/* FSA Account Information */}
+            {/* Total Used Amount */}
             <div>
-              <h3 className="text-md font-medium text-gray-900 mb-4">DCFSA Account</h3>
-              <dl className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Account Type</dt>
-                  <dd className="text-sm text-gray-900">{fsaAccount.accountType}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Status</dt>
-                  <dd className="text-sm text-gray-900">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      fsaAccount.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : fsaAccount.status === 'inactive'
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {fsaAccount.status.charAt(0).toUpperCase() + fsaAccount.status.slice(1)}
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Plan Year</dt>
-                  <dd className="text-sm text-gray-900">
-                    {new Date(fsaAccount.planYearStart).getFullYear()}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Annual Limit</dt>
-                  <dd className="text-sm text-gray-900">${fsaAccount.annualLimit.toLocaleString()}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Used Amount</dt>
-                  <dd className="text-sm text-gray-900">${fsaAccount.usedAmount.toLocaleString()}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Remaining Balance</dt>
-                  <dd className={`text-sm font-semibold ${remainingBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${remainingBalance.toLocaleString()}
-                  </dd>
-                </div>
-              </dl>
+              <dt className="text-sm font-medium text-gray-500">Total Used Amount</dt>
+              <dd className="mt-1 text-3xl font-semibold text-red-600">
+                ${aggregateData.totalUsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </dd>
+            </div>
+
+            {/* Total Remaining Balance */}
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Total Remaining Balance</dt>
+              <dd className={`mt-1 text-3xl font-semibold ${aggregateData.totalRemainingBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${aggregateData.totalRemainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </dd>
+            </div>
+
+            {/* Average Usage Percentage */}
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Average Usage Percentage</dt>
+              <dd className="mt-1 text-3xl font-semibold text-blue-600">
+                {aggregateData.averageUsagePercentage.toFixed(2)}%
+              </dd>
             </div>
           </div>
 
-          {/* Balance Summary Card */}
+          {/* Usage Progress Bar */}
           <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Balance Summary</h4>
-            <div className="w-full bg-gray-200 rounded-full h-4">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Overall Usage</h4>
+            <div className="w-full bg-gray-200 rounded-full h-6">
               <div
-                className="bg-blue-600 h-4 rounded-full"
+                className="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2"
                 style={{
-                  width: `${Math.min((fsaAccount.usedAmount / fsaAccount.annualLimit) * 100, 100)}%`
+                  width: `${Math.min(usagePercentage, 100)}%`
                 }}
-              ></div>
+              >
+                {usagePercentage > 5 && (
+                  <span className="text-xs font-semibold text-white">
+                    {usagePercentage.toFixed(1)}%
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
-              <span>Used: ${fsaAccount.usedAmount.toLocaleString()}</span>
-              <span>Remaining: ${remainingBalance.toLocaleString()}</span>
+            <div className="flex justify-between text-xs text-gray-600 mt-2">
+              <span>Used: ${aggregateData.totalUsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>Remaining: ${aggregateData.totalRemainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
