@@ -96,7 +96,7 @@ export class FSAAccountsService {
       const transaction = this.transactionRepository.create({
         fsaAccountId: id,
         amount,
-        description: description || `Allocation of $${amount.toFixed(2)}`,
+        description: description || `Allocation of $${(amount || 0).toFixed(2)}`,
         transactionDate: new Date(),
         transactionType: 'credit',
         status: 'approved',

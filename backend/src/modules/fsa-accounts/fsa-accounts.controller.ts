@@ -1,8 +1,15 @@
 import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { IsNumber, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 import { FSAAccountsService } from './fsa-accounts.service';
 
 export class AllocateDto {
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0.01)
   amount: number;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 }
 

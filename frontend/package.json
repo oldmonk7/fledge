@@ -21,6 +21,8 @@
     "postcss": "^8",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
-    "@fledge/shared": "workspace:*"
+    "@fledge/shared": "workspace:*",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
   }
 }
