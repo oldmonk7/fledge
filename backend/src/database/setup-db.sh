@@ -48,5 +48,5 @@ echo "Database setup complete!"
 echo "Database: $DB_NAME"
 echo "User: $DB_USER"
 echo ""
-echo "You can now run the application or execute init.sql to seed demo data."
+echo "You can now run the application."
 

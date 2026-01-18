@@ -33,22 +33,13 @@ A monorepo application for managing Dependent Care Flexible Spending Accounts (D
    ```bash
    pnpm run db:up
    ```
-   This will start PostgreSQL and automatically seed it with demo data.
+   This will start PostgreSQL.
 
 4. **Start the development servers:**
    ```bash
    pnpm run dev
    ```
    This will start both the backend (http://localhost:3001) and frontend (http://localhost:3000).
-
-### Demo Data
-
-The application comes with pre-seeded demo data for one employee:
-
-- **Employee**: John Doe (Employee ID: EMP001)
-- **FSA Account**: DCFSA with $5,000 annual limit
-- **Current Balance**: $3,200 remaining ($1,800 used)
-- **Sample Transactions**: Several childcare-related expenses
 
 ## API Endpoints
 
