@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Card, CardHeader, CardBody, Alert } from '@/components/ui';
@@ -16,6 +16,17 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
+
+  // Redirect to home page after successful login
+  useEffect(() => {
+    if (loginSuccess) {
+      const timer = setTimeout(() => {
+        // Use window.location for full page reload to ensure layout picks up user from localStorage
+        window.location.href = '/';
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loginSuccess]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -59,14 +70,12 @@ export default function LoginPage() {
 
       // Store user data (for now, we'll use localStorage - in production, use secure cookies)
       localStorage.setItem('user', JSON.stringify(response.user));
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+      }
 
       // Show success message briefly
       setLoginSuccess(true);
-
-      // Redirect to home page after successful login
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Login failed. Please try again.');
     } finally {

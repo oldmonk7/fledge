@@ -1,6 +1,24 @@
-import { EmployeeWithFSA, Employee, FSAAccount, AggregateUsage } from '@fledge/shared';
+import { EmployeeWithFSA, Employee, FSAAccount, AggregateUsage, User } from '@fledge/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  accessToken?: string;
+  message: string;
+}
 
 export class ApiClient {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -56,6 +74,26 @@ export class ApiClient {
     return this.request<FSAAccount>(`/api/fsa-accounts/${fsaAccountId}/allocate`, {
       method: 'POST',
       body: JSON.stringify({ amount, description }),
+    });
+  }
+
+  async login(credentials: LoginRequest): Promise<AuthResponse> {
+    return this.request<AuthResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async signup(signupData: SignupRequest): Promise<AuthResponse> {
+    return this.request<AuthResponse>('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(signupData),
+    });
+  }
+
+  async logout(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/logout', {
+      method: 'POST',
     });
   }
 }

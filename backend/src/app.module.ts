@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { FSAAccountsModule } from './modules/fsa-accounts/fsa-accounts.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -20,8 +22,10 @@ import { FSAAccountsModule } from './modules/fsa-accounts/fsa-accounts.module';
       synchronize: process.env.NODE_ENV !== 'production', // Don't use in production
       logging: process.env.NODE_ENV === 'development',
     }),
+    UsersModule,
     EmployeesModule,
     FSAAccountsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

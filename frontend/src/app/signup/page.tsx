@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Card, CardBody, Alert } from '@/components/ui';
+import { apiClient } from '@/lib/api';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,6 +19,17 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupSuccess, setSignupSuccess] = useState(false);
+
+  // Redirect to home page after successful signup
+  useEffect(() => {
+    if (signupSuccess) {
+      const timer = setTimeout(() => {
+        // Use window.location for full page reload to ensure layout picks up user from localStorage
+        window.location.href = '/';
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [signupSuccess]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -71,10 +83,22 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
+      // Call the signup API
+      const response = await apiClient.signup({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+
+      // Store user data (for now, we'll use localStorage - in production, use secure cookies)
+      localStorage.setItem('user', JSON.stringify(response.user));
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+      }
+
+      // Show success message briefly
       setSignupSuccess(true);
-      setTimeout(() => {
-        router.push('/login');
-      }, 1000);
     } catch (error) {
       setSignupError(error instanceof Error ? error.message : 'Signup failed. Please try again.');
     } finally {
@@ -103,7 +127,7 @@ export default function SignupPage() {
           <CardBody className="px-8 py-10">
             {signupSuccess && (
               <Alert variant="success" className="mb-6">
-                Account created! Redirecting to sign in...
+                Account created! Redirecting to home page...
               </Alert>
             )}
             {signupError && (

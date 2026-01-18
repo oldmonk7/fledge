@@ -1,14 +1,33 @@
-export interface Employee {
+export type UserRole = 'admin' | 'employee';
+
+export interface User {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
-  employeeId: string;
+  role: UserRole;
   department?: string;
+  isActive: boolean;
+  lastLoginAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  employee?: Employee;
+}
+
+export interface Employee {
+  id: string;
+  userId: string;
+  employeeId: string;
   hireDate: Date | string;
   createdAt: Date | string;
   updatedAt: Date | string;
   fsaAccounts?: FSAAccount[];
+  // Computed properties from User
+  firstName: string;
+  lastName: string;
+  email: string;
+  department?: string;
+  fullName: string;
 }
 
 export interface FSAAccount {

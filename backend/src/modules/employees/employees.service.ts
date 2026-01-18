@@ -13,14 +13,14 @@ export class EmployeesService {
 
   async findAll(): Promise<Employee[]> {
     return this.employeeRepository.find({
-      relations: ['fsaAccounts'],
+      relations: ['user', 'fsaAccounts'],
     });
   }
 
   async findOne(id: string): Promise<Employee> {
     const employee = await this.employeeRepository.findOne({
       where: { id },
-      relations: ['fsaAccounts'],
+      relations: ['user', 'fsaAccounts'],
     });
 
     if (!employee) {
@@ -34,7 +34,7 @@ export class EmployeesService {
 
     const employee = await this.employeeRepository.findOne({
       where: { id },
-      relations: ['fsaAccounts'],
+      relations: ['user', 'fsaAccounts'],
     });
 
     if (!employee) {
@@ -49,6 +49,11 @@ export class EmployeesService {
 
     return {
       ...employee,
+      firstName: employee.user.firstName,
+      lastName: employee.user.lastName,
+      email: employee.user.email,
+      department: employee.user.department,
+      fullName: employee.user.fullName,
       fsaAccount,
     };
   }
@@ -56,7 +61,7 @@ export class EmployeesService {
   async findByEmployeeId(employeeId: string): Promise<Employee> {
     const employee = await this.employeeRepository.findOne({
       where: { employeeId },
-      relations: ['fsaAccounts'],
+      relations: ['user', 'fsaAccounts'],
     });
 
     if (!employee) {
@@ -68,7 +73,7 @@ export class EmployeesService {
 
   async getAggregateUsage(): Promise<AggregateUsage> {
     const employees = await this.employeeRepository.find({
-      relations: ['fsaAccounts'],
+      relations: ['user', 'fsaAccounts'],
     });
 
     let totalAnnualLimit = 0;

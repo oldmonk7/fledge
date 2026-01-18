@@ -17,14 +17,14 @@ export class FSAAccountsService {
 
   async findAll(): Promise<FSAAccount[]> {
     return this.fsaAccountRepository.find({
-      relations: ['employee', 'transactions'],
+      relations: ['employee', 'employee.user', 'transactions'],
     });
   }
 
   async findOne(id: string): Promise<FSAAccount> {
     const fsaAccount = await this.fsaAccountRepository.findOne({
       where: { id },
-      relations: ['employee', 'transactions'],
+      relations: ['employee', 'employee.user', 'transactions'],
     });
 
     if (!fsaAccount) {
@@ -37,7 +37,7 @@ export class FSAAccountsService {
   async findByEmployeeId(employeeId: string): Promise<FSAAccount[]> {
     return this.fsaAccountRepository.find({
       where: { employeeId },
-      relations: ['employee', 'transactions'],
+      relations: ['employee', 'employee.user', 'transactions'],
       order: { planYearStart: 'DESC' },
     });
   }
@@ -48,7 +48,7 @@ export class FSAAccountsService {
         employeeId,
         status: 'active',
       },
-      relations: ['employee', 'transactions'],
+      relations: ['employee', 'employee.user', 'transactions'],
       order: { planYearStart: 'DESC' },
     });
   }
@@ -60,7 +60,7 @@ export class FSAAccountsService {
 
     const fsaAccount = await this.fsaAccountRepository.findOne({
       where: { id },
-      relations: ['employee'],
+      relations: ['employee', 'employee.user'],
     });
 
     if (!fsaAccount) {
@@ -109,7 +109,7 @@ export class FSAAccountsService {
       // Return updated account with transaction
       return this.fsaAccountRepository.findOne({
         where: { id },
-        relations: ['employee', 'transactions'],
+        relations: ['employee', 'employee.user', 'transactions'],
       }) as Promise<FSAAccount>;
     } catch (error) {
       await queryRunner.rollbackTransaction();
