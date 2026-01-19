@@ -5,11 +5,13 @@ import { EmployeesModule } from './modules/employees/employees.module';
 import { FSAAccountsModule } from './modules/fsa-accounts/fsa-accounts.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { PlaidModule } from './modules/plaid/plaid.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', 'src/.env'], // Try both project root and src directory
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -26,6 +28,7 @@ import { AuthModule } from './modules/auth/auth.module';
     EmployeesModule,
     FSAAccountsModule,
     AuthModule,
+    PlaidModule,
   ],
 })
 export class AppModule {}

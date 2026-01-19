@@ -96,6 +96,38 @@ export class ApiClient {
       method: 'POST',
     });
   }
+
+  // Plaid methods
+  async createPlaidLinkToken(userId: string): Promise<{ link_token: string }> {
+    return this.request<{ link_token: string }>(`/api/plaid/link-token/${userId}`, {
+      method: 'POST',
+    });
+  }
+
+  async exchangePlaidToken(userId: string, publicToken: string): Promise<any> {
+    return this.request(`/api/plaid/exchange-token/${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({ public_token: publicToken }),
+    });
+  }
+
+  async getPlaidTransactions(userId: string, startDate?: string, endDate?: string): Promise<any> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const queryString = params.toString();
+    return this.request(`/api/plaid/transactions/${userId}${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getPlaidItems(userId: string): Promise<any[]> {
+    return this.request<any[]>(`/api/plaid/items/${userId}`);
+  }
+
+  async removePlaidItem(userId: string, itemId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/api/plaid/items/${userId}/${itemId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient();

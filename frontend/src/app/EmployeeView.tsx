@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { EmployeeWithFSA, User } from '@fledge/shared';
-import { Card, CardHeader, CardBody, ProgressBar, Badge, Button } from '@/components/ui';
+import { Card, CardHeader, CardBody, ProgressBar, Badge, Button, Alert, LoadingSpinner } from '@/components/ui';
+import { usePlaidLink } from 'react-plaid-link';
 import Link from 'next/link';
+import { apiClient } from '@/lib/api';
 
 interface EmployeeViewProps {
   employeeData: EmployeeWithFSA;
@@ -16,6 +19,101 @@ export default function EmployeeView({ employeeData, user }: EmployeeViewProps) 
     ? (fsaAccount.usedAmount / fsaAccount.annualLimit) * 100
     : 0;
 
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [plaidItems, setPlaidItems] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const userId = user.id;
+
+  useEffect(() => {
+    if (userId) {
+      loadPlaidItems();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      if (plaidItems.length > 0) {
+        loadTransactions();
+      } else {
+        setTransactions([]);
+      }
+    }
+  }, [userId, plaidItems.length]);
+
+  const loadPlaidItems = async () => {
+    if (!userId) return;
+    try {
+      const items = await apiClient.getPlaidItems(userId);
+      setPlaidItems(items);
+    } catch (err) {
+      console.error('Error loading Plaid items:', err);
+    }
+  };
+
+  const loadTransactions = async () => {
+    if (!userId || plaidItems.length === 0) {
+      setTransactions([]);
+      return;
+    }
+    setLoadingTransactions(true);
+    setError(null);
+    try {
+      const data = await apiClient.getPlaidTransactions(userId);
+      setTransactions(data.transactions || []);
+    } catch (err) {
+      console.error('Error loading transactions:', err);
+      // Don't show error if it's just that there are no items
+      if (err instanceof Error && !err.message.includes('No Plaid items')) {
+        setError(err.message);
+      }
+      setTransactions([]);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const handlePlaidLink = async () => {
+    if (!userId) return;
+    try {
+      const response = await apiClient.createPlaidLinkToken(userId);
+      setLinkToken(response.link_token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create Plaid link');
+    }
+  };
+
+  const onSuccess = async (publicToken: string) => {
+    if (!userId) return;
+    try {
+      await apiClient.exchangePlaidToken(userId, publicToken);
+      setSuccess('Bank account connected successfully!');
+      setError(null);
+      await loadPlaidItems();
+      await loadTransactions();
+      setLinkToken(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to connect bank account');
+    }
+  };
+
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess,
+    onExit: () => {
+      setLinkToken(null);
+    },
+  });
+
+  useEffect(() => {
+    if (linkToken && ready) {
+      open();
+    }
+  }, [linkToken, ready, open]);
+
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'active':
@@ -25,6 +123,21 @@ export default function EmployeeView({ employeeData, user }: EmployeeViewProps) 
       default:
         return 'error';
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -180,9 +293,9 @@ export default function EmployeeView({ employeeData, user }: EmployeeViewProps) 
             </div>
           </div>
 
-          {/* Action Button */}
+          {/* Action Buttons */}
           {fsaAccount.status === 'active' && user.employee?.id && (
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
               <Link href={`/employees/${user.employee.id}/allocate`}>
                 <Button variant="primary" leftIcon={
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -192,6 +305,136 @@ export default function EmployeeView({ employeeData, user }: EmployeeViewProps) 
                   Allocate Funds
                 </Button>
               </Link>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Plaid Integration Section */}
+      <Card className="mt-6">
+        <CardHeader title="Bank Account Integration" />
+        <CardBody>
+          {error && (
+            <Alert variant="error" title="Error" className="mb-4">
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert variant="success" title="Success" className="mb-4">
+              {success}
+            </Alert>
+          )}
+
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-neutral-900">Connect Your Bank Account</h3>
+              <p className="text-sm text-neutral-600 mt-1">
+                Connect your bank account to automatically import transactions and track your FSA spending.
+              </p>
+            </div>
+            {plaidItems.length === 0 ? (
+              <Button
+                variant="primary"
+                onClick={handlePlaidLink}
+                leftIcon={
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                }
+              >
+                Connect Bank Account
+              </Button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-neutral-900">
+                    {plaidItems[0].institutionName || 'Bank Account'}
+                  </p>
+                  <p className="text-xs text-neutral-500">Connected</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={handlePlaidLink}
+                  leftIcon={
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  }
+                >
+                  Reconnect
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Transactions Section */}
+          {plaidItems.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-neutral-900">Recent Transactions</h3>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={loadTransactions}
+                  disabled={loadingTransactions}
+                  leftIcon={
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  }
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              {loadingTransactions ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="md" text="Loading transactions..." />
+                </div>
+              ) : transactions.length === 0 ? (
+                <p className="text-sm text-neutral-600 text-center py-8">No transactions found.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-neutral-200">
+                    <thead className="bg-neutral-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          Merchant
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                          Amount
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-neutral-200">
+                      {transactions.map((transaction) => (
+                        <tr key={transaction.transaction_id} className="hover:bg-neutral-50">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-900">
+                            {formatDate(transaction.date)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-900">
+                            {transaction.merchant_name || transaction.name || 'Unknown'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-600">
+                            {transaction.category?.[0] || 'Uncategorized'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                            <span className={transaction.amount > 0 ? 'text-error-600' : 'text-success-600'}>
+                              {formatCurrency(Math.abs(transaction.amount))}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </CardBody>

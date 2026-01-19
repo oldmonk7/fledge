@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Employee } from './employee.entity';
+import { PlaidItem } from './plaid-item.entity';
 
 export type UserRole = 'admin' | 'employee';
 
@@ -45,6 +46,10 @@ export class User {
   // One-to-one relationship with Employee (only for users with employee role)
   @OneToOne(() => Employee, employee => employee.user, { nullable: true })
   employee?: Employee;
+
+  // One-to-many relationship with PlaidItem
+  @OneToMany(() => PlaidItem, plaidItem => plaidItem.user)
+  plaidItems?: PlaidItem[];
 
   // Helper method to get full name
   get fullName(): string {
