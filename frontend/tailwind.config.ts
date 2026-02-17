@@ -19,7 +19,10 @@ const config: Config = {
         error: tokens.colors.error,
         info: tokens.colors.info,
       },
-      fontFamily: tokens.typography.fontFamily,
+      fontFamily: {
+        sans: [...tokens.typography.fontFamily.sans],
+        mono: [...tokens.typography.fontFamily.mono],
+      },
       fontSize: tokens.typography.fontSize,
       fontWeight: tokens.typography.fontWeight,
       letterSpacing: tokens.typography.letterSpacing,

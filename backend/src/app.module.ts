@@ -13,17 +13,28 @@ import { PlaidModule } from './modules/plaid/plaid.module';
       isGlobal: true,
       envFilePath: ['.env', 'src/.env'], // Try both project root and src directory
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5433'),
-      username: process.env.DB_USERNAME || 'fledge_user',
-      password: process.env.DB_PASSWORD || 'fledge_password',
-      database: process.env.DB_NAME || 'fledge',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV !== 'production', // Don't use in production
-      logging: process.env.NODE_ENV === 'development',
-    }),
+    TypeOrmModule.forRoot(
+      process.env.DATABASE_URL
+        ? {
+            type: 'postgres',
+            url: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false },
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: process.env.NODE_ENV !== 'production',
+            logging: process.env.NODE_ENV === 'development',
+          }
+        : {
+            type: 'postgres',
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT || '5433'),
+            username: process.env.DB_USERNAME || 'fledge_user',
+            password: process.env.DB_PASSWORD || 'fledge_password',
+            database: process.env.DB_NAME || 'fledge',
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: process.env.NODE_ENV !== 'production', // Don't use in production
+            logging: process.env.NODE_ENV === 'development',
+          },
+    ),
     UsersModule,
     EmployeesModule,
     FSAAccountsModule,
