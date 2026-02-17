@@ -26,15 +26,17 @@ const config: Config = {
       fontSize: Object.fromEntries(
         Object.entries(tokens.typography.fontSize).map(([k, v]) => [
           k,
-          typeof v === 'string' ? v : [v[0], { ...v[1] }],
+          typeof v === 'string' ? v : ([v[0], { ...v[1] }] as [string, { lineHeight: string; letterSpacing: string; fontWeight?: string | number }]),
         ])
-      ) as typeof tokens.typography.fontSize,
+      ) as Config['theme'] extends { extend?: { fontSize?: infer F } } ? F : never,
       fontWeight: tokens.typography.fontWeight,
       letterSpacing: tokens.typography.letterSpacing,
       spacing: tokens.spacing,
       borderRadius: tokens.borderRadius,
       boxShadow: tokens.shadows,
-      zIndex: tokens.zIndex,
+      zIndex: Object.fromEntries(
+        Object.entries(tokens.zIndex).map(([k, v]) => [k, String(v)])
+      ),
       screens: tokens.breakpoints,
       transitionDuration: tokens.transitions.duration,
       transitionTimingFunction: tokens.transitions.easing,

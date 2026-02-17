@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && npm run postbuild",
+    "build": "pnpm --filter @fledge/shared build && nest build && npm run postbuild",
     "postbuild": "if [ -d dist/src ]; then mv dist/src/* dist/ && rmdir dist/src 2>/dev/null || rm -rf dist/src; fi",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main",
