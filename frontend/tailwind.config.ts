@@ -23,7 +23,12 @@ const config: Config = {
         sans: [...tokens.typography.fontFamily.sans],
         mono: [...tokens.typography.fontFamily.mono],
       },
-      fontSize: tokens.typography.fontSize,
+      fontSize: Object.fromEntries(
+        Object.entries(tokens.typography.fontSize).map(([k, v]) => [
+          k,
+          typeof v === 'string' ? v : [v[0], { ...v[1] }],
+        ])
+      ) as typeof tokens.typography.fontSize,
       fontWeight: tokens.typography.fontWeight,
       letterSpacing: tokens.typography.letterSpacing,
       spacing: tokens.spacing,
