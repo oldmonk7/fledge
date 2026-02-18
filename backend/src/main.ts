@@ -1,21 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import type { Request } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use((req: Request, _res, next) => {
-    const host = req.get('host') ?? req.hostname ?? '-';
-    const origin = req.get('origin') ?? '-';
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} host=${host} origin=${origin}`);
-    next();
-  });
-
-  app.setGlobalPrefix('api');
-
-  // CORS: allow frontend origin(s). With credentials we must echo back the request origin (no '*').
+  // Allowed CORS origins: FRONTEND_URL (comma-separated) + localhost + Railway frontends.
   const frontendUrls = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
     : [];
@@ -26,15 +17,34 @@ async function bootstrap() {
     'https://127.0.0.1:3000',
     ...frontendUrls,
   ]);
-  const isAllowedOrigin = (origin: string) => {
+  const isAllowedOrigin = (origin: string | undefined): boolean => {
+    if (!origin) return false;
     if (allowedOrigins.has(origin)) return true;
-    // Allow Railway frontend subdomains (e.g. https://something.up.railway.app).
     if (/^https?:\/\/[a-z0-9-]+\.up\.railway\.app$/i.test(origin)) return true;
     return false;
   };
+
+  const httpAdapter = app.getHttpAdapter();
+  const instance = httpAdapter.getInstance();
+
+  // Handle OPTIONS preflight immediately; only set Allow-Origin when origin is allowed.
+  instance.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === 'OPTIONS') {
+      const origin = req.headers.origin as string | undefined;
+      if (origin && isAllowedOrigin(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).end();
+    }
+    next();
+  });
+
+  // CORS for non-OPTIONS requests (same allowlist).
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, false);
       if (isAllowedOrigin(origin)) return callback(null, true);
       callback(null, false);
     },
@@ -44,6 +54,20 @@ async function bootstrap() {
     exposedHeaders: ['Authorization'],
     optionsSuccessStatus: 204,
     preflightContinue: false,
+  });
+
+  app.setGlobalPrefix('api');
+
+  // Request log (defensive so it never breaks the request).
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    try {
+      const host = req.get?.('host') ?? req.hostname ?? '-';
+      const origin = req.get?.('origin') ?? '-';
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} host=${host} origin=${origin}`);
+    } catch (_) {
+      /* no-op */
+    }
+    next();
   });
 
   // Enable global validation pipes
