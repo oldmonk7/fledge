@@ -7,10 +7,25 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Enable CORS for frontend
+  // CORS: allow frontend origin(s). FRONTEND_URL can be one or comma-separated (e.g. for prod + staging).
+  const frontendUrls = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
+    : [];
+  const origins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    ...frontendUrls,
+  ];
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. Postman, same-origin).
+      if (!origin) return callback(null, true);
+      if (origins.includes(origin)) return callback(null, true);
+      callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Enable global validation pipes
