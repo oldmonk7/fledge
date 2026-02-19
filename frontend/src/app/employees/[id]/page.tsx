@@ -192,7 +192,7 @@ export default function EmployeeDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 }>
-                  Allocate Funds
+                  Allocate money
                 </Button>
               </Link>
             </div>

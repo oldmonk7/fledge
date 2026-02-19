@@ -302,7 +302,7 @@ export default function EmployeeView({ employeeData, user }: EmployeeViewProps) 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 }>
-                  Allocate Funds
+                  Allocate money
                 </Button>
               </Link>
             </div>

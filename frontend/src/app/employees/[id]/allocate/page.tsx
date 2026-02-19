@@ -125,7 +125,7 @@ export default function AllocatePage() {
     <div className="page-container max-w-4xl">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Allocate Funds to FSA Account</h1>
+          <h1 className="text-3xl font-bold text-neutral-900">Allocate money to FSA Account</h1>
           <p className="mt-1 text-sm text-neutral-500">
             {employeeData.firstName} {employeeData.lastName} - {fsaAccount.accountType}
           </p>
@@ -177,7 +177,7 @@ export default function AllocatePage() {
 
       {/* Allocation Form */}
       <Card>
-        <CardHeader title="Allocate Funds" />
+        <CardHeader title="Allocate money" />
         <CardBody>
           {allocationSuccess && (
             <Alert variant="success" className="mb-4">
@@ -239,7 +239,7 @@ export default function AllocatePage() {
                 disabled={allocating || remainingSpace <= 0}
                 isLoading={allocating}
               >
-                Allocate Funds
+                Allocate money
               </Button>
             </div>
           </form>
